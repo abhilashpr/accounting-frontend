@@ -32,7 +32,7 @@ export class Login {
         private readonly messageService: MessageService
     ) { }
     ngOnInit() {
-
+        this.checkTokenValidRedirect()
     }
 
     checkTokenValidRedirect() {
