@@ -1,5 +1,5 @@
 import { ApiResponse } from '@/types/apiResponse';
-import { AuthResponse, ForgotPasswordRequest, LoginRequest, ResetPasswordRequest, VerifyOtpRequest } from '@/types/auth';
+import { AuthResponse, ForgotPasswordRequest, LoginRequest, ResetPasswordRequest, VerifyAccessRequest, VerifyAccessResponse, VerifyOtpRequest } from '@/types/auth';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { tap } from 'rxjs';
@@ -13,6 +13,10 @@ export class Auth {
 
   constructor(private readonly http: HttpClient) { }
 
+  getLocalAccessToken() {
+    return localStorage.getItem('accessToken');
+  }
+
   getLocalRefreshToken() {
     return localStorage.getItem('refreshToken');
   }
@@ -23,9 +27,13 @@ export class Auth {
   }
 
   userLogin(data: LoginRequest) {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}login`, data).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}auth/login`, data).pipe(
       tap((res) => this.setTokenData(res.data))
     )
+  }
+
+  verifyAccessToken(tokenData: VerifyAccessRequest) {
+    return this.http.post<ApiResponse<VerifyAccessResponse>>(`${this.baseUrl}auth/verify-access-token`, tokenData);
   }
   forgotPassword(data: ForgotPasswordRequest) {
     return this.http.post(`${this.baseUrl}forgot-password`, data);
