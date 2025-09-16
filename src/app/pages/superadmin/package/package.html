@@ -1,1 +1,37 @@
-<p>package works!</p>
+<div class="card">
+    <div class="font-semibold text-xl mb-4">Package</div>
+    <p-table [value]="packages" sortField="representative.name" sortMode="single" [scrollable]="true"
+        scrollHeight="400px" rowGroupMode="subheader" groupRowsBy="representative.name"
+        [tableStyle]="{ 'min-width': '60rem' }">
+        <ng-template #header>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Max Branch</th>
+                <th>Status</th>
+            </tr>
+        </ng-template>
+        
+        
+        <ng-template #body let-customer let-rowIndex="rowIndex">
+            <tr>
+                <td>
+                    {{ customer.name }}
+                </td>
+                <td>
+                    {{ customer.price }}
+                </td>
+                <td>
+                    {{ customer.duration }}
+                </td>
+                <td>
+                    {{ customer.maxBranch }}
+                </td>
+                <td>
+                    {{ customer.is_active }}
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

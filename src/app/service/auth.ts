@@ -21,7 +21,12 @@ export class Auth {
     return localStorage.getItem('refreshToken');
   }
 
+  getUserRole() {
+    return localStorage.getItem('role');
+  }
+
   setTokenData(data: AuthResponse) {
+    localStorage.setItem('role', data.role);
     localStorage.setItem('accessToken', data.access_token);
     localStorage.setItem('refreshToken', data.refresh_token);
   }

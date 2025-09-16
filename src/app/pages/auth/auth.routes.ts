@@ -7,7 +7,7 @@ import { VerifyOtp } from './verify-otp/verify-otp';
 import { ResetPassword } from './reset-password/reset-password';
 
 export default [
-    { path: '', component: Login },
+    { path: 'login', component: Login },
     { path: 'access', component: Access },
     { path: 'error', component: Error },
     { path: 'forgot-password', component: ForgotPassword},
