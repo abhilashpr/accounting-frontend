@@ -1,37 +1,282 @@
 <div class="card">
-    <div class="font-semibold text-xl mb-4">Package</div>
-    <p-table [value]="packages" sortField="representative.name" sortMode="single" [scrollable]="true"
-        scrollHeight="400px" rowGroupMode="subheader" groupRowsBy="representative.name"
-        [tableStyle]="{ 'min-width': '60rem' }">
+    <div class="font-semibold text-xl mb-4">Package Management</div>
+    
+    <!-- Search and Filter Section -->
+    <div class="flex justify-content-between align-items-center mb-4 gap-3">
+        <!-- Left: Search -->
+        <div class="flex-1">
+            <p-iconField iconPosition="left">
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input 
+                    pInputText 
+                    type="text" 
+                    placeholder="Search packages..." 
+                    (input)="onGlobalFilter($event)"
+                    class="w-full"
+                    #searchInput>
+            </p-iconField>
+        </div>
+        
+        <!-- Right: Filter and Add Button -->
+        <div class="flex align-items-center gap-2">
+            <!-- <p-dropdown 
+                [options]="statusOptions" 
+                [(ngModel)]="selectedStatus" 
+                placeholder="Filter by Status"
+                optionLabel="label" 
+                optionValue="value"
+                [showClear]="true"
+                (onChange)="onStatusFilter($event)"
+                class="w-12rem">
+            </p-dropdown> -->
+            
+            <p-button 
+                label="Add Package" 
+                icon="pi pi-plus" 
+                (onClick)="addPackage()"
+                severity="success">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <p-table 
+        #dt
+        [value]="packages" 
+        [globalFilterFields]="['name', 'price', 'duration', 'maxBranch']"
+        sortField="name" 
+        sortMode="single" 
+        [scrollable]="true"
+        scrollHeight="400px" 
+        [tableStyle]="{ 'min-width': '60rem' }"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+        
         <ng-template #header>
             <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Duration</th>
-                <th>Max Branch</th>
-                <th>Status</th>
+                <th scope="col" pSortableColumn="name">
+                    Name <p-sortIcon field="name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="price">
+                    Price <p-sortIcon field="price"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="duration">
+                    Duration (Days) <p-sortIcon field="duration"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="maxBranch">
+                    Max Branch <p-sortIcon field="maxBranch"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="is_active">
+                    Status <p-sortIcon field="is_active"></p-sortIcon>
+                </th>
+                <th scope="col" style="width: 150px;">Actions</th>
             </tr>
         </ng-template>
         
-        
-        <ng-template #body let-customer let-rowIndex="rowIndex">
+        <ng-template #body let-package let-rowIndex="rowIndex">
             <tr>
                 <td>
-                    {{ customer.name }}
+                    <strong>{{ package.name }}</strong>
                 </td>
                 <td>
-                    {{ customer.price }}
+                    <span class="font-semibold">${{ package.price | number:'1.2-2' }}</span>
                 </td>
                 <td>
-                    {{ customer.duration }}
+                    {{ package.duration }} days
                 </td>
                 <td>
-                    {{ customer.maxBranch }}
+                    <p-tag 
+                        [value]="package.maxBranch.toString()" 
+                        [severity]="package.maxBranch > 50 ? 'success' : package.maxBranch > 10 ? 'warning' : 'info'">
+                    </p-tag>
                 </td>
                 <td>
-                    {{ customer.is_active }}
+                    <p-tag 
+                        [value]="package.is_active === 'Y' ? 'Active' : 'Inactive'" 
+                        [severity]="package.is_active === 'Y' ? 'success' : 'danger'">
+                    </p-tag>
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button 
+                            icon="pi pi-pencil" 
+                            [text]="true" 
+                            [rounded]="true" 
+                            severity="info" 
+                            size="small"
+                            (click)="editPackage(package)"
+                            pTooltip="Edit Package">
+                        </p-button>
+                        <p-button 
+                            icon="pi pi-trash" 
+                            [text]="true" 
+                            [rounded]="true" 
+                            severity="danger" 
+                            size="small"
+                            (click)="deletePackage(package)"
+                            pTooltip="Delete Package">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        
+        <ng-template #empty>
+            <tr>
+                <td colspan="6" class="text-center py-6">
+                    <div class="text-500">
+                        <i class="pi pi-inbox text-4xl mb-3"></i>
+                        <p class="text-lg">No packages found</p>
+                        <p class="text-sm">Try adjusting your search or filter criteria</p>
+                    </div>
                 </td>
             </tr>
         </ng-template>
     </p-table>
+
+    <!-- Add/Edit Package Sidebar -->
+    <!-- <p-sidebar 
+        [(visible)]="sidebarVisible" 
+        position="right" 
+        [style]="{width: '35rem'}"
+        [modal]="true"
+        [dismissible]="true"
+        [showCloseIcon]="true"
+        (onHide)="onSidebarHide()">
+        
+        <ng-template pTemplate="header">
+            <h3 class="m-0 font-semibold">
+                {{ isEditMode ? 'Edit Package' : 'Add New Package' }}
+            </h3>
+        </ng-template>
+
+        <div class="p-4">
+            <form [formGroup]="packageForm" class="flex flex-column gap-4">
+                
+         
+                <div class="field">
+                    <label for="name" class="block font-medium mb-2">
+                        Package Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        id="name"
+                        type="text" 
+                        pInputText 
+                        formControlName="name"
+                        placeholder="Enter package name"
+                        class="w-full"
+                        [class.ng-invalid]="packageForm.get('name')?.invalid && packageForm.get('name')?.touched"
+                        [class.ng-dirty]="packageForm.get('name')?.valid">
+                    <small 
+                        class="text-red-500" 
+                        *ngIf="packageForm.get('name')?.invalid && packageForm.get('name')?.touched">
+                        Package name is required
+                    </small>
+                </div>
+
+                
+                <div class="field">
+                    <label for="price" class="block font-medium mb-2">
+                        Price ($) <span class="text-red-500">*</span>
+                    </label>
+                    <p-inputNumber
+                        id="price"
+                        formControlName="price"
+                        mode="currency"
+                        currency="USD"
+                        locale="en-US"
+                        placeholder="0.00"
+                        [min]="0"
+                        [maxFractionDigits]="2"
+                        class="w-full">
+                    </p-inputNumber>
+                    <small 
+                        class="text-red-500" 
+                        *ngIf="packageForm.get('price')?.invalid && packageForm.get('price')?.touched">
+                        Price is required and must be greater than 0
+                    </small>
+                </div>
+
+               
+                <div class="field">
+                    <label for="duration" class="block font-medium mb-2">
+                        Duration (Days) <span class="text-red-500">*</span>
+                    </label>
+                    <p-inputNumber
+                        id="duration"
+                        formControlName="duration"
+                        placeholder="30"
+                        [min]="1"
+                        [max]="9999"
+                        class="w-full">
+                    </p-inputNumber>
+                    <small 
+                        class="text-red-500" 
+                        *ngIf="packageForm.get('duration')?.invalid && packageForm.get('duration')?.touched">
+                        Duration is required and must be at least 1 day
+                    </small>
+                </div>
+
+                
+                <div class="field">
+                    <label for="maxBranch" class="block font-medium mb-2">
+                        Max Branches <span class="text-red-500">*</span>
+                    </label>
+                    <p-inputNumber
+                        id="maxBranch"
+                        formControlName="maxBranch"
+                        placeholder="1"
+                        [min]="1"
+                        [max]="9999"
+                        class="w-full">
+                    </p-inputNumber>
+                    <small 
+                        class="text-red-500" 
+                        *ngIf="packageForm.get('maxBranch')?.invalid && packageForm.get('maxBranch')?.touched">
+                        Max branches is required and must be at least 1
+                    </small>
+                </div>
+
+          
+                <div class="field">
+                    <label for="status" class="block font-medium mb-2">Status</label>
+                    <p-select
+                        id="status"
+                        [options]="statusOptionsForm"
+                        formControlName="is_active"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select status"
+                        class="w-full">
+                    </p-select>
+                </div>
+
+              
+                <div class="flex gap-3 justify-content-end mt-4">
+                    <p-button 
+                        label="Cancel" 
+                        severity="secondary" 
+                        [text]="true"
+                        (click)="closeSidebar()">
+                    </p-button>
+                    <p-button 
+                        [label]="isEditMode ? 'Update Package' : 'Create Package'"
+                        [loading]="formLoading"
+                        [disabled]="packageForm.invalid"
+                        (click)="onSubmit()">
+                    </p-button>
+                </div>
+
+            </form>
+        </div>
+    </p-sidebar> -->
+
+    <!-- Toast for notifications -->
+    <p-toast position="top-right"></p-toast>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog></p-confirmDialog>
 </div>

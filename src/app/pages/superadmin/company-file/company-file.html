@@ -1,1 +1,30 @@
-<p>company-file works!</p>
+<div class="card">
+    <div class="font-semibold text-xl mb-4">Package</div>
+    <p-table [value]="companyFiles" sortField="representative.name" sortMode="single" [scrollable]="true"
+        scrollHeight="400px" rowGroupMode="subheader" groupRowsBy="representative.name"
+        [tableStyle]="{ 'min-width': '60rem' }">
+        <ng-template #header>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </ng-template>
+        
+        
+        <ng-template #body let-companyFile let-rowIndex="rowIndex">
+            <tr>
+                <td>
+                    {{ companyFile.file_name }}
+                </td>
+                <td>
+                    {{ companyFile.is_active }}
+                </td>
+
+                <td>
+                    
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
