@@ -1,0 +1,133 @@
+/* package.component.scss */
+
+.field {
+  .ng-invalid.ng-dirty {
+    border-color: #e24c4c;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(226, 76, 76, 0.25);
+    }
+  }
+  
+  .ng-valid.ng-dirty {
+    border-color: #00d4aa;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+    }
+  }
+}
+
+/* Custom styling for the sidebar form */
+:host ::ng-deep {
+  .p-sidebar {
+    .p-sidebar-content {
+      padding: 0;
+    }
+    
+    .p-sidebar-header {
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+  }
+  
+  /* Form field spacing */
+  .field {
+    margin-bottom: 1.5rem;
+    
+    label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+    
+    .p-inputtext,
+    .p-inputnumber,
+    .p-dropdown {
+      width: 100%;
+    }
+    
+    small.text-red-500 {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+    }
+  }
+  
+  /* Button styling */
+  .p-button {
+    &.p-button-secondary {
+      background: transparent;
+      border: 1px solid #6c757d;
+      color: #6c757d;
+      
+      &:hover {
+        background: #6c757d;
+        color: white;
+      }
+    }
+  }
+  
+  /* Table action buttons */
+  .p-button.p-button-text.p-button-rounded {
+    width: 2rem;
+    height: 2rem;
+    
+    &.p-button-info:hover {
+      background: rgba(0, 123, 255, 0.1);
+    }
+    
+    &.p-button-danger:hover {
+      background: rgba(220, 53, 69, 0.1);
+    }
+  }
+  
+  /* Toast positioning */
+  .p-toast {
+    z-index: 9999;
+  }
+  
+  /* Enhanced table styling */
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+    
+    .p-datatable-tbody > tr {
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background: #f8f9fa;
+      }
+    }
+  }
+  
+  /* Search and filter section */
+  .p-iconfield {
+    position: relative;
+    
+    .p-inputicon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+    }
+    
+    .p-inputtext {
+      padding-left: 2.5rem;
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :host ::ng-deep {
+    .p-sidebar {
+      width: 100% !important;
+    }
+  }
+}

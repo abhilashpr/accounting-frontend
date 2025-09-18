@@ -19,17 +19,6 @@
         
         <!-- Right: Filter and Add Button -->
         <div class="flex align-items-center gap-2">
-            <!-- <p-dropdown 
-                [options]="statusOptions" 
-                [(ngModel)]="selectedStatus" 
-                placeholder="Filter by Status"
-                optionLabel="label" 
-                optionValue="value"
-                [showClear]="true"
-                (onChange)="onStatusFilter($event)"
-                class="w-12rem">
-            </p-dropdown> -->
-            
             <p-button 
                 label="Add Package" 
                 icon="pi pi-plus" 
@@ -64,7 +53,7 @@
                     Price <p-sortIcon field="price"></p-sortIcon>
                 </th>
                 <th scope="col" pSortableColumn="duration">
-                    Duration (Days) <p-sortIcon field="duration"></p-sortIcon>
+                    Duration (Days) <p-sortIcon field="duration_days"></p-sortIcon>
                 </th>
                 <th scope="col" pSortableColumn="maxBranch">
                     Max Branch <p-sortIcon field="maxBranch"></p-sortIcon>
@@ -85,12 +74,12 @@
                     <span class="font-semibold">${{ package.price | number:'1.2-2' }}</span>
                 </td>
                 <td>
-                    {{ package.duration }} days
+                    {{ package.duration_days }} days
                 </td>
                 <td>
                     <p-tag 
-                        [value]="package.maxBranch.toString()" 
-                        [severity]="package.maxBranch > 50 ? 'success' : package.maxBranch > 10 ? 'warning' : 'info'">
+                        [value]="package.maximum_branches.toString()" 
+                        [severity]="package.maximum_branches > 50 ? 'success' : package.maximum_branches > 10 ? 'warning' : 'info'">
                     </p-tag>
                 </td>
                 <td>
@@ -137,142 +126,153 @@
         </ng-template>
     </p-table>
 
-    <!-- Add/Edit Package Sidebar -->
-    <!-- <p-sidebar 
+    <!-- Add/Edit Package Drawer -->
+    <p-drawer 
         [(visible)]="sidebarVisible" 
         position="right" 
-        [style]="{width: '35rem'}"
         [modal]="true"
         [dismissible]="true"
         [showCloseIcon]="true"
-        (onHide)="onSidebarHide()">
+        [blockScroll]="true"
+        class="package-drawer"
+        (onHide)="onSidebarHide()"
+        [style.width]="'30vw'">
+
         
         <ng-template pTemplate="header">
-            <h3 class="m-0 font-semibold">
-                {{ isEditMode ? 'Edit Package' : 'Add New Package' }}
-            </h3>
+            <div class="flex align-items-center gap-2">
+                <h3 class="m-0 font-semibold text-xl">
+                    {{ isEditMode ? 'Edit Package' : 'Add New Package' }}
+                </h3>
+            </div>
         </ng-template>
 
-        <div class="p-4">
-            <form [formGroup]="packageForm" class="flex flex-column gap-4">
-                
-         
-                <div class="field">
-                    <label for="name" class="block font-medium mb-2">
-                        Package Name <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                        id="name"
-                        type="text" 
-                        pInputText 
-                        formControlName="name"
-                        placeholder="Enter package name"
-                        class="w-full"
-                        [class.ng-invalid]="packageForm.get('name')?.invalid && packageForm.get('name')?.touched"
-                        [class.ng-dirty]="packageForm.get('name')?.valid">
-                    <small 
-                        class="text-red-500" 
-                        *ngIf="packageForm.get('name')?.invalid && packageForm.get('name')?.touched">
-                        Package name is required
-                    </small>
-                </div>
+        <ng-template pTemplate="content">
+            <div class="drawer-content p-4">
+                <form [formGroup]="packageForm" class="flex flex-column gap-4" style="flex-direction: column;">
+                    
+                    <!-- Package Name -->
+                    <div class="field">
+                        <label for="name" class="block font-medium mb-2 text-900">
+                            Package Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            id="name"
+                            type="text" 
+                            pInputText 
+                            formControlName="name"
+                            placeholder="Enter package name"
+                            class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="packageForm.get('name')?.invalid && packageForm.get('name')?.touched"
+                            [class.ng-dirty]="packageForm.get('name')?.valid">
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="packageForm.get('name')?.invalid && packageForm.get('name')?.touched">
+                            Package name is required
+                        </small>
+                    </div>
 
-                
-                <div class="field">
-                    <label for="price" class="block font-medium mb-2">
-                        Price ($) <span class="text-red-500">*</span>
-                    </label>
-                    <p-inputNumber
-                        id="price"
-                        formControlName="price"
-                        mode="currency"
-                        currency="USD"
-                        locale="en-US"
-                        placeholder="0.00"
-                        [min]="0"
-                        [maxFractionDigits]="2"
-                        class="w-full">
-                    </p-inputNumber>
-                    <small 
-                        class="text-red-500" 
-                        *ngIf="packageForm.get('price')?.invalid && packageForm.get('price')?.touched">
-                        Price is required and must be greater than 0
-                    </small>
-                </div>
+                    <!-- Price -->
+                    <div class="field">
+                        <label for="price" class="block font-medium mb-2 text-900">
+                            Price ($) <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="price"
+                            formControlName="price"
+                            mode="currency"
+                            currency="USD"
+                            locale="en-US"
+                            placeholder="0.00"
+                            [min]="0"
+                            [maxFractionDigits]="2"
+                            styleClass="w-full"
+                            inputStyleClass="w-full">
+                        </p-inputNumber>
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="packageForm.get('price')?.invalid && packageForm.get('price')?.touched">
+                            Price is required and must be greater than 0
+                        </small>
+                    </div>
 
-               
-                <div class="field">
-                    <label for="duration" class="block font-medium mb-2">
-                        Duration (Days) <span class="text-red-500">*</span>
-                    </label>
-                    <p-inputNumber
-                        id="duration"
-                        formControlName="duration"
-                        placeholder="30"
-                        [min]="1"
-                        [max]="9999"
-                        class="w-full">
-                    </p-inputNumber>
-                    <small 
-                        class="text-red-500" 
-                        *ngIf="packageForm.get('duration')?.invalid && packageForm.get('duration')?.touched">
-                        Duration is required and must be at least 1 day
-                    </small>
-                </div>
+                    <!-- Duration -->
+                    <div class="field">
+                        <label for="duration" class="block font-medium mb-2 text-900">
+                            Duration (Days) <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="duration"
+                            formControlName="duration_days"
+                            placeholder="30"
+                            [min]="1"
+                            [max]="9999"
+                            styleClass="w-full"
+                            inputStyleClass="w-full">
+                        </p-inputNumber>
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            Duration is required and must be at least 1 day
+                            *ngIf="packageForm.get('duration_days')?.invalid && packageForm.get('duration_days')?.touched">
+                        </small>
+                    </div>
 
-                
-                <div class="field">
-                    <label for="maxBranch" class="block font-medium mb-2">
-                        Max Branches <span class="text-red-500">*</span>
-                    </label>
-                    <p-inputNumber
-                        id="maxBranch"
-                        formControlName="maxBranch"
-                        placeholder="1"
-                        [min]="1"
-                        [max]="9999"
-                        class="w-full">
-                    </p-inputNumber>
-                    <small 
-                        class="text-red-500" 
-                        *ngIf="packageForm.get('maxBranch')?.invalid && packageForm.get('maxBranch')?.touched">
-                        Max branches is required and must be at least 1
-                    </small>
-                </div>
+                    <!-- Max Branches -->
+                    <div class="field">
+                        <label for="maxBranch" class="block font-medium mb-2 text-900">
+                            Max Branches <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="maxBranch"
+                            formControlName="maximum_branches"
+                            placeholder="1"
+                            [min]="1"
+                            [max]="9999"
+                            styleClass="w-full"
+                            inputStyleClass="w-full">
+                        </p-inputNumber>
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="packageForm.get('maximum_branches')?.invalid && packageForm.get('maximum_branches')?.touched">
+                            Max branches is required and must be at least 1
+                        </small>
+                    </div>
 
-          
-                <div class="field">
-                    <label for="status" class="block font-medium mb-2">Status</label>
-                    <p-select
-                        id="status"
-                        [options]="statusOptionsForm"
-                        formControlName="is_active"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Select status"
-                        class="w-full">
-                    </p-select>
-                </div>
+                    <!-- Status -->
+                    <div class="field">
+                        <label for="status" class="block font-medium mb-2 text-900">Status</label>
+                        <p-select
+                            id="status"
+                            [options]="statusOptionsForm"
+                            formControlName="is_active"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Select status"
+                            styleClass="w-full">
+                        </p-select>
+                    </div>
 
-              
-                <div class="flex gap-3 justify-content-end mt-4">
-                    <p-button 
-                        label="Cancel" 
-                        severity="secondary" 
-                        [text]="true"
-                        (click)="closeSidebar()">
-                    </p-button>
-                    <p-button 
-                        [label]="isEditMode ? 'Update Package' : 'Create Package'"
-                        [loading]="formLoading"
-                        [disabled]="packageForm.invalid"
-                        (click)="onSubmit()">
-                    </p-button>
-                </div>
+                </form>
+            </div>
+        </ng-template>
 
-            </form>
-        </div>
-    </p-sidebar> -->
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-content-end p-3 border-top-1 surface-border">
+                <p-button 
+                    label="Cancel" 
+                    severity="secondary" 
+                    [outlined]="true"
+                    (click)="closeSidebar()">
+                </p-button>
+                <p-button 
+                    [label]="isEditMode ? 'Update Package' : 'Create Package'"
+                    [loading]="formLoading"
+                    [disabled]="packageForm.invalid"
+                    (click)="onSubmit()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-drawer>
 
     <!-- Toast for notifications -->
     <p-toast position="top-right"></p-toast>
@@ -280,3 +280,68 @@
     <!-- Confirmation Dialog -->
     <p-confirmDialog></p-confirmDialog>
 </div>
+
+<style>
+/* Custom styles for the drawer */
+.package-drawer .p-drawer {
+    width: 35rem !important;
+    max-width: 90vw;
+}
+
+.package-drawer .p-drawer-content {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.package-drawer .drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.package-drawer .p-drawer-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-card);
+}
+
+.package-drawer .p-drawer-footer {
+    margin-top: auto;
+    background: var(--surface-card);
+}
+
+/* Form field improvements */
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.field small.text-red-500 {
+    font-size: 0.75rem;
+}
+
+/* Input improvements */
+.p-inputnumber,
+.p-dropdown {
+    width: 100%;
+}
+
+.p-inputnumber .p-inputtext,
+.p-dropdown .p-dropdown-label {
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .package-drawer .p-drawer {
+        width: 100vw !important;
+        max-width: 100vw;
+    }
+}
+</style>

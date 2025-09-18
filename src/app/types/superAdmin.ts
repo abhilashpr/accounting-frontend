@@ -2,8 +2,16 @@ export interface PackageSchema {
     id: number;
     name: string;
     price: number;
-    duration: number;
-    maxBranch: number;
+    duration_days: number;
+    maximum_branches: number;
+    is_active: string;
+}
+
+export interface AddUpdatePackageSchema {
+    name: string;
+    price: number;
+    duration_days: number;
+    maximum_branches: number;
     is_active: string;
 }
 
