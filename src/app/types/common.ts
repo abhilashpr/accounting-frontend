@@ -5,5 +5,5 @@ export interface StatusOption {
 
 export interface StatusFormOption {
   label: string;
-  value: string;
+  value: boolean;
 }

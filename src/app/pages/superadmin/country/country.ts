@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
+import { Superadmin } from '@/service/superadmin';
 
 @Component({
   selector: 'app-country',
@@ -36,40 +37,7 @@ import { InputTextModule } from 'primeng/inputtext';
   styleUrl: './country.scss'
 })
 export class Country {
-  countries: CountrySchema[] = [
-    {
-      id: 1,
-      name: "India",
-      code: "IN",
-      phone_code: "+91",
-      currency: "INR",
-      is_active: true,
-    },
-    {
-      id: 2,
-      name: "United States",
-      code: "US",
-      phone_code: "+1",
-      currency: "USD",
-      is_active: true,
-    },
-    {
-      id: 3,
-      name: "United Kingdom",
-      code: "GB",
-      phone_code: "+44",
-      currency: "GBP",
-      is_active: true,
-    },
-    {
-      id: 4,
-      name: "Japan",
-      code: "JP",
-      phone_code: "+81",
-      currency: "JPY",
-      is_active: false,
-    },
-  ];
+  countries: CountrySchema[] = []
 
   statusOptions: StatusOption[] = [
     { label: 'All Status', value: null },
@@ -78,8 +46,8 @@ export class Country {
   ];
 
   statusOptionsForm: StatusFormOption[] = [
-    { label: 'Active', value: 'Y' },
-    { label: 'Inactive', value: 'N' }
+    { label: 'Active', value: true },
+    { label: 'Inactive', value: false }
   ];
   @ViewChild('dt') dt!: Table;
 
@@ -90,14 +58,15 @@ export class Country {
   isEditMode: boolean = false;
   loading: boolean = false;
   formLoading: boolean = false;
-  selectedCountry: Country | null = null;
+  selectedCountry: CountrySchema | null = null;
 
  
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly confirmationService: ConfirmationService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly superAdminService:Superadmin
   ) {
     this.initForm();
   }
@@ -127,47 +96,45 @@ export class Country {
         Validators.maxLength(3),
         Validators.pattern(/^[A-Za-z]+$/)
       ]],
-      is_active: ['Y', Validators.required]
+      is_active: ['', Validators.required]
     });
   }
 
   loadCountries(): void {
     this.loading = true;
-    
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      
-      this.loading = false;
-    }, 1000);
 
-    // Example API call:
-    // this.countryService.getCountries().subscribe({
-    //   next: (data) => {
-    //     this.countries = data;
-    //     this.loading = false;
-    //   },
-    //   error: (error) => {
-    //     this.messageService.add({
-    //       severity: 'error',
-    //       summary: 'Error',
-    //       detail: 'Failed to load countries'
-    //     });
-    //     this.loading = false;
-    //   }
-    // });
+    this.superAdminService.getCountries().subscribe({
+      next: (res: ApiResponse<CountrySchema[]>) => {
+        this.loading = false;
+        this.countries = res.data;
+      },
+      error: (error: any) => {
+        this.loading = false;
+        this.messageService.add({
+          styleClass: 'danger-light-popover',
+          severity: 'Error',
+          summary: 'Error',
+          detail: error?.error?.message,
+          life: 6000
+        });
+      }
+    });
+    
+
+    
   }
 
   addCountry(): void {
     this.isEditMode = false;
     this.selectedCountry = null;
     this.countryForm.reset();
-    this.countryForm.patchValue({ is_active: 'Y' });
+    this.countryForm.patchValue({ is_active: true });
     this.sidebarVisible = true;
   }
 
   editCountry(country: CountrySchema): void {
     this.isEditMode = true;
-    // this.selectedCountry = { ...country };
+    this.selectedCountry = country;
     this.countryForm.patchValue({
       name: country.name,
       code: country.code,
@@ -178,6 +145,23 @@ export class Country {
     this.sidebarVisible = true;
   }
 
+  deleteSelectedCountry(country_id:number): void {
+    this.superAdminService.deleteCountry(country_id).subscribe({
+      next: (res: ApiResponse<CountrySchema>) => {
+        this.loadCountries();
+      },
+      error: (error: any) => {
+        this.messageService.add({
+          styleClass: 'danger-light-popover',
+          severity: 'Error',
+          summary: 'Error',
+          detail: error?.error?.message,
+          life: 6000
+        });
+      }
+    })
+  }
+
   deleteCountry(country: CountrySchema): void {
     this.confirmationService.confirm({
       message: `Are you sure you want to delete ${country.name}?`,
@@ -186,7 +170,7 @@ export class Country {
       acceptButtonStyleClass: 'p-button-danger p-button-text',
       rejectButtonStyleClass: 'p-button-text',
       accept: () => {
-        // this.performDelete(country);
+        this.deleteSelectedCountry(country.id);
       }
     });
   }
@@ -203,24 +187,6 @@ export class Country {
       });
     }
 
-    // Example API call:
-    // this.countryService.deleteCountry(country.id!).subscribe({
-    //   next: () => {
-    //     this.loadCountries();
-    //     this.messageService.add({
-    //       severity: 'success',
-    //       summary: 'Success',
-    //       detail: `${country.name} has been deleted`
-    //     });
-    //   },
-    //   error: (error) => {
-    //     this.messageService.add({
-    //       severity: 'error',
-    //       summary: 'Error',
-    //       detail: 'Failed to delete country'
-    //     });
-    //   }
-    // });
   }
 
   onSubmit(): void {
@@ -243,85 +209,54 @@ export class Country {
   }
 
   private createCountry(countryData: any): void {
-    // Mock create - replace with actual API call
-    setTimeout(() => {
-      const newCountry: CountrySchema = {
-        ...countryData,
-        id: this.countries.length + 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      this.countries.push(newCountry);
-      this.formLoading = false;
-      this.closeSidebar();
-      
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: `${countryData.name} has been created`
-      });
-    }, 1000);
+   
+    
 
-    // Example API call:
-    // this.countryService.createCountry(countryData).subscribe({
-    //   next: (response) => {
-    //     this.loadCountries();
-    //     this.formLoading = false;
-    //     this.closeSidebar();
-    //     this.messageService.add({
-    //       severity: 'success',
-    //       summary: 'Success',
-    //       detail: `${countryData.name} has been created`
-    //     });
-    //   },
-    //   error: (error) => {
-    //     this.formLoading = false;
-    //     this.messageService.add({
-    //       severity: 'error',
-    //       summary: 'Error',
-    //       detail: 'Failed to create country'
-    //     });
-    //   }
-    // });
+ 
+    this.superAdminService.createCountry(countryData).subscribe({
+      next: (response) => {
+        this.loadCountries();
+        this.formLoading = false;
+        this.closeSidebar();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `${countryData.name} has been created`
+        });
+      },
+      error: (error) => {
+        this.formLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.error.message
+        });
+      }
+    });
   }
 
   private updateCountry(countryData: any): void {
-    // Mock update - replace with actual API call
-    setTimeout(() => {
-      
-      
-      this.formLoading = false;
-      this.closeSidebar();
-      
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: `${countryData.name} has been updated`
-      });
-    }, 1000);
-
-    // Example API call:
-    // this.countryService.updateCountry(this.selectedCountry!.id!, countryData).subscribe({
-    //   next: (response) => {
-    //     this.loadCountries();
-    //     this.formLoading = false;
-    //     this.closeSidebar();
-    //     this.messageService.add({
-    //       severity: 'success',
-    //       summary: 'Success',
-    //       detail: `${countryData.name} has been updated`
-    //     });
-    //   },
-    //   error: (error) => {
-    //     this.formLoading = false;
-    //     this.messageService.add({
-    //       severity: 'error',
-    //       summary: 'Error',
-    //       detail: 'Failed to update country'
-    //     });
-    //   }
-    // });
+    if (!this.selectedCountry) return;
+    this.superAdminService.updateCountry(this.selectedCountry.id, countryData).subscribe({
+      next: (response) => {
+        this.loadCountries();
+        this.formLoading = false;
+        this.closeSidebar();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `${countryData.name} has been updated`
+        });
+      },
+      error: (error:Error) => {
+        this.formLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to update country'
+        });
+      }
+    });
   }
 
   closeSidebar(): void {

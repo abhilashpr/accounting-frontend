@@ -1,28 +1,54 @@
 <div class="card">
-    <div class="font-semibold text-xl mb-4">Package</div>
+    <div class="font-semibold text-xl mb-4">Company Files</div>
+    <div class="flex justify-content-between align-items-center mb-4 gap-3">
+        <!-- Left: Search -->
+        <div class="flex-1">
+            <p-iconField iconPosition="left">
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input pInputText type="text" placeholder="Search countries..." (input)="onGlobalFilter($event)"
+                    class="w-full" #searchInput>
+            </p-iconField>
+        </div>
+
+        <!-- Right: Filter and Add Button -->
+        <div class="flex align-items-center gap-2">
+            <p-button label="Add Company File" icon="pi pi-plus" (onClick)="addCompanyFile()" severity="success">
+            </p-button>
+        </div>
+    </div>
     <p-table [value]="companyFiles" sortField="representative.name" sortMode="single" [scrollable]="true"
         scrollHeight="400px" rowGroupMode="subheader" groupRowsBy="representative.name"
-        [tableStyle]="{ 'min-width': '60rem' }">
+        [tableStyle]="{ 'min-width': '60rem' }" [paginator]="true" [rows]="10">
         <ng-template #header>
             <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Status</th>
+                <th scope="col" pSortableColumn="name">Name</th>
+                <th scope="col" pSortableColumn="is_active">Status</th>
                 <th scope="col">Actions</th>
             </tr>
         </ng-template>
-        
-        
+
+
         <ng-template #body let-companyFile let-rowIndex="rowIndex">
             <tr>
                 <td>
                     {{ companyFile.file_name }}
                 </td>
                 <td>
-                    {{ companyFile.is_active }}
+                    <p-tag [value]="companyFile.is_active ? 'Active' : 'Inactive'"
+                        [severity]="companyFile.is_active ? 'success' : 'danger'">
+                    </p-tag>
                 </td>
 
                 <td>
-                    
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info" size="small"
+                            (click)="editCompanyFile(companyFile)" pTooltip="Edit Country">
+                        </p-button>
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small"
+                            (click)="deleteCompanyFile(companyFile)" pTooltip="Delete Country">
+                        </p-button>
+                    </div>
+
                 </td>
             </tr>
         </ng-template>
