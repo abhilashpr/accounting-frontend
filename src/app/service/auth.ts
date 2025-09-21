@@ -2,6 +2,7 @@ import { ApiResponse } from '@/types/apiResponse';
 import { AuthResponse, ForgotPasswordRequest, LoginRequest, ResetPasswordRequest, VerifyAccessRequest, VerifyAccessResponse, VerifyOtpRequest } from '@/types/auth';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import {  Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -11,7 +12,7 @@ import { environment } from 'src/environments/environment';
 export class Auth {
   private readonly baseUrl = environment.baseApiUrl;
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(private readonly http: HttpClient, private readonly router: Router) { }
 
   getLocalAccessToken() {
     return localStorage.getItem('accessToken');
@@ -55,6 +56,14 @@ export class Auth {
   refreshToken() {
     const refreshToken = localStorage.getItem('refreshToken');
     return this.http.post(`${this.baseUrl}refresh-token`, { refreshToken });
+  }
+
+  logout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('role');
+    this.router.navigate(['']);
+    
   }
 
 

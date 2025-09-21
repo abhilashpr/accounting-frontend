@@ -80,19 +80,37 @@ export class Superadmin {
   // COmpany File
 
   getCompanyFiles() {
-    return this.http.get<ApiResponse<CompanyFileSchema[]>>(`${this.baseUrl}super_admin_settings/company-file`);
+    return this.http.get<ApiResponse<CompanyFileSchema[]>>(`${this.baseUrl}super_admin_settings/file`);
   }
 
   createCompanyFile(data: any) {
-    return this.http.post<ApiResponse<CompanyFileSchema>>(`${this.baseUrl}super_admin_settings/company-file`, data);
+    return this.http.post<ApiResponse<CompanyFileSchema>>(`${this.baseUrl}super_admin_settings/file`, data);
   }
 
   updateCompanyFile(file_id:number, data: any) {
-    return this.http.put<ApiResponse<CompanyFileSchema>>(`${this.baseUrl}super_admin_settings/company-file/${file_id}`, data);
+    return this.http.put<ApiResponse<CompanyFileSchema>>(`${this.baseUrl}super_admin_settings/file/${file_id}`, data);
   }
 
   deleteCompanyFile(file_id:number) {
-    return this.http.delete<ApiResponse<null>>(`${this.baseUrl}super_admin_settings/company-file/${file_id}`);
+    return this.http.delete<ApiResponse<null>>(`${this.baseUrl}super_admin_settings/file/${file_id}`);
+  }
+
+  // COMPANY
+
+  getCompanies() {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}company`);
+  }
+
+  createCompany(data: any) {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}company`, data);
+  }
+
+  updateCompany(company_id:number, data: any) {
+    return this.http.put<ApiResponse<any>>(`${this.baseUrl}company/${company_id}`, data);
+  }
+
+  deleteCompany(company_id:number) {
+    return this.http.delete<ApiResponse<null>>(`${this.baseUrl}company/${company_id}`);
   }
 
   

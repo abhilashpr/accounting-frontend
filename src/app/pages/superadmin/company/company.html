@@ -1,37 +1,435 @@
 <div class="card">
-    <div class="font-semibold text-xl mb-4">Package</div>
-    <p-table [value]="companies" sortField="representative.name" sortMode="single" [scrollable]="true"
-        scrollHeight="400px" rowGroupMode="subheader" groupRowsBy="representative.name"
-        [tableStyle]="{ 'min-width': '60rem' }">
+    <div class="font-semibold text-xl mb-4">Company Management</div>
+
+    <!-- Search and Filter Section -->
+    <div class="flex justify-content-between align-items-center mb-4 gap-3">
+        <!-- Left: Search -->
+        <div class="flex-1">
+            <p-iconField iconPosition="left">
+                <p-inputIcon class="pi pi-search"></p-inputIcon>
+                <input pInputText type="text" placeholder="Search companies..." (input)="onGlobalFilter($event)"
+                    class="w-full" #searchInput>
+            </p-iconField>
+        </div>
+
+        <!-- Right: Filter and Add Button -->
+        <div class="flex align-items-center gap-2">
+            <p-button label="Add Company" icon="pi pi-plus" (onClick)="addCompany()" severity="success">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <p-table #dt [value]="companies"
+        [globalFilterFields]="['name', 'email', 'phone', 'admin.name', 'current_package.package.name']" sortField="name"
+        sortMode="single" [scrollable]="true" scrollHeight="400px" [tableStyle]="{ 'min-width': '80rem' }"
+        [loading]="loading" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+
         <ng-template #header>
             <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Price</th>
-                <th scope="col">Duration</th>
-                <th scope="col">Max Branch</th>
-                <th scope="col">Status</th>
+                <th scope="col" pSortableColumn="name">
+                    Company Name <p-sortIcon field="name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="email">
+                    Email <p-sortIcon field="email"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="phone">
+                    Phone <p-sortIcon field="phone"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="admin.name">
+                    Admin <p-sortIcon field="admin.name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="current_package.package.name">
+                    Subscription <p-sortIcon field="current_package.package.name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="is_active">
+                    Status <p-sortIcon field="is_active"></p-sortIcon>
+                </th>
+                <th scope="col" style="width: 180px;">Actions</th>
             </tr>
         </ng-template>
-        
-        
+
         <ng-template #body let-company let-rowIndex="rowIndex">
             <tr>
                 <td>
-                    {{ company.name }}
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-building text-primary"></i>
+                        <div>
+                            <strong class="block">{{ company.name }}</strong>
+                            <small class="text-500">{{ company.address_line1 }}</small>
+                        </div>
+                    </div>
                 </td>
                 <td>
-                    {{ company.price }}
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-envelope text-600"></i>
+                        <span>{{ company.email }}</span>
+                    </div>
                 </td>
                 <td>
-                    {{ company.duration }}
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-phone text-600"></i>
+                        <span class="font-mono">{{ company.phone }}</span>
+                    </div>
                 </td>
                 <td>
-                    {{ company.maxBranch }}
+                    <div class="flex align-items-center gap-2">
+                        <i class="pi pi-user text-600"></i>
+                        <div>
+                            <span class="block">{{ company.admin?.name || company.admin?.first_name + ' ' +
+                                company.admin?.last_name }}</span>
+                            <small class="text-500">{{ company.admin?.email }}</small>
+                        </div>
+                    </div>
                 </td>
                 <td>
-                    {{ company.is_active }}
+                    @if (company.current_package?.package?.name){
+                    <p-tag [value]="company.current_package.package.name" severity="info" class="font-semibold">
+                    </p-tag>
+                    }
+
+                    @else{
+                    <p-tag value="No Package" severity="warning"></p-tag>
+                    }
+
+                </td>
+                <td>
+                    <p-tag [value]="company.is_active ? 'Active' : 'Inactive'"
+                        [severity]="company.is_active ? 'success' : 'danger'">
+                    </p-tag>
+                </td>
+                <td>
+                    <div class="flex gap-1">
+                        <p-button icon="pi pi-eye" [text]="true" [rounded]="true" severity="info" size="small"
+                            (click)="viewCompany(company)" pTooltip="View Company">
+                        </p-button>
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info" size="small"
+                            (click)="editCompany(company)" pTooltip="Edit Company">
+                        </p-button>
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small"
+                            (click)="deleteCompany(company)" pTooltip="Delete Company">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #empty>
+            <tr>
+                <td colspan="7" class="text-center py-6">
+                    <div class="text-500">
+                        <i class="pi pi-building text-4xl mb-3"></i>
+                        <p class="text-lg">No companies found</p>
+                        <p class="text-sm">Try adjusting your search or filter criteria</p>
+                    </div>
                 </td>
             </tr>
         </ng-template>
     </p-table>
+
+    <!-- Add/Edit Company Drawer -->
+    <p-drawer [(visible)]="sidebarVisible" position="right" [modal]="true" [dismissible]="true" [showCloseIcon]="true"
+        [blockScroll]="true" class="company-drawer" (onHide)="onSidebarHide()" [style.width]="'40vw'">
+
+        <ng-template pTemplate="header">
+            <div class="flex align-items-center gap-2">
+                <h3 class="m-0 font-semibold text-xl">
+                    {{ isEditMode ? 'Edit Company' : 'Add New Company' }}
+                </h3>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="drawer-content p-4">
+                <form [formGroup]="companyForm" class="flex flex-column gap-4" style="flex-direction: column;">
+
+                    <!-- Company Information Section -->
+                    <div class="section-header">
+                        <h4 class="text-lg font-semibold text-primary mb-3">Company Information</h4>
+                    </div>
+
+                    <!-- Company Name -->
+                    <div class="field">
+                        <label for="name" class="block font-medium mb-2 text-900">
+                            Company Name <span class="text-red-500">*</span>
+                        </label>
+                        <input id="name" type="text" pInputText formControlName="name" placeholder="Enter company name"
+                            class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('name')?.invalid && companyForm.get('name')?.touched"
+                            [class.ng-dirty]="companyForm.get('name')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('name')?.invalid && companyForm.get('name')?.touched">
+                            Company name is required
+                        </small>
+                    </div>
+
+                    <!-- Address Line 1 -->
+                    <div class="field">
+                        <label for="address_line1" class="block font-medium mb-2 text-900">
+                            Address Line 1 <span class="text-red-500">*</span>
+                        </label>
+                        <input id="address_line1" type="text" pInputText formControlName="address_line1"
+                            placeholder="Enter street address" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('address_line1')?.invalid && companyForm.get('address_line1')?.touched"
+                            [class.ng-dirty]="companyForm.get('address_line1')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('address_line1')?.invalid && companyForm.get('address_line1')?.touched">
+                            Address is required
+                        </small>
+                    </div>
+
+                    <!-- Address Line 2 -->
+                    <div class="field">
+                        <label for="address_line2" class="block font-medium mb-2 text-900">
+                            Address Line 2
+                        </label>
+                        <input id="address_line2" type="text" pInputText formControlName="address_line2"
+                            placeholder="Suite, apartment, etc. (optional)" class="w-full p-inputtext-sm">
+                    </div>
+
+                    <!-- Email -->
+                    <div class="field">
+                        <label for="email" class="block font-medium mb-2 text-900">
+                            Company Email <span class="text-red-500">*</span>
+                        </label>
+                        <input id="email" type="email" pInputText formControlName="email"
+                            placeholder="company@example.com" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('email')?.invalid && companyForm.get('email')?.touched"
+                            [class.ng-dirty]="companyForm.get('email')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('email')?.invalid && companyForm.get('email')?.touched">
+                            <span *ngIf="companyForm.get('email')?.hasError('required')">Email is required</span>
+                            <span *ngIf="companyForm.get('email')?.hasError('email')">Please enter a valid email</span>
+                        </small>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="field">
+                        <label for="phone" class="block font-medium mb-2 text-900">
+                            Phone Number <span class="text-red-500">*</span>
+                        </label>
+                        <input id="phone" type="tel" pInputText formControlName="phone" placeholder="+1234567890"
+                            class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('phone')?.invalid && companyForm.get('phone')?.touched"
+                            [class.ng-dirty]="companyForm.get('phone')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('phone')?.invalid && companyForm.get('phone')?.touched">
+                            Phone number is required
+                        </small>
+                    </div>
+
+                    <!-- Admin Information Section -->
+                    <div class="section-header mt-4">
+                        <h4 class="text-lg font-semibold text-primary mb-3">Admin Information</h4>
+                    </div>
+
+                    <!-- Admin First Name -->
+                    <div class="field">
+                        <label for="admin_first_name" class="block font-medium mb-2 text-900">
+                            Admin First Name <span class="text-red-500">*</span>
+                        </label>
+                        <input id="admin_first_name" type="text" pInputText formControlName="admin_first_name"
+                            placeholder="Enter first name" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('admin_first_name')?.invalid && companyForm.get('admin_first_name')?.touched"
+                            [class.ng-dirty]="companyForm.get('admin_first_name')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('admin_first_name')?.invalid && companyForm.get('admin_first_name')?.touched">
+                            First name is required
+                        </small>
+                    </div>
+
+                    <!-- Admin Last Name -->
+                    <div class="field">
+                        <label for="admin_last_name" class="block font-medium mb-2 text-900">
+                            Admin Last Name <span class="text-red-500">*</span>
+                        </label>
+                        <input id="admin_last_name" type="text" pInputText formControlName="admin_last_name"
+                            placeholder="Enter last name" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('admin_last_name')?.invalid && companyForm.get('admin_last_name')?.touched"
+                            [class.ng-dirty]="companyForm.get('admin_last_name')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('admin_last_name')?.invalid && companyForm.get('admin_last_name')?.touched">
+                            Last name is required
+                        </small>
+                    </div>
+
+                    <!-- Admin Email -->
+                    <div class="field">
+                        <label for="admin_email" class="block font-medium mb-2 text-900">
+                            Admin Email <span class="text-red-500">*</span>
+                        </label>
+                        <input id="admin_email" type="email" pInputText formControlName="admin_email"
+                            placeholder="admin@example.com" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('admin_email')?.invalid && companyForm.get('admin_email')?.touched"
+                            [class.ng-dirty]="companyForm.get('admin_email')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('admin_email')?.invalid && companyForm.get('admin_email')?.touched">
+                            <span *ngIf="companyForm.get('admin_email')?.hasError('required')">Admin email is
+                                required</span>
+                            <span *ngIf="companyForm.get('admin_email')?.hasError('email')">Please enter a valid
+                                email</span>
+                        </small>
+                    </div>
+
+                    <!-- Admin Password (only for create mode) -->
+                    <div class="field" *ngIf="!isEditMode">
+                        <label for="admin_password" class="block font-medium mb-2 text-900">
+                            Admin Password <span class="text-red-500">*</span>
+                        </label>
+                        <input id="admin_password" type="password" pInputText formControlName="admin_password"
+                            placeholder="Enter admin password" class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="companyForm.get('admin_password')?.invalid && companyForm.get('admin_password')?.touched"
+                            [class.ng-dirty]="companyForm.get('admin_password')?.valid">
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('admin_password')?.invalid && companyForm.get('admin_password')?.touched">
+                            Password is required (minimum 6 characters)
+                        </small>
+                    </div>
+
+                    <!-- Package Selection (only for create mode) -->
+                    <div class="field" *ngIf="!isEditMode">
+                        <div class="section-header mt-4">
+                            <h4 class="text-lg font-semibold text-primary mb-3">Package Information</h4>
+                        </div>
+
+                        <label for="package_id" class="block font-medium mb-2 text-900">
+                            Package <span class="text-red-500">*</span>
+                        </label>
+                        <p-select id="package_id" [options]="packages" formControlName="package_id" optionLabel="name"
+                            optionValue="id" placeholder="Select a package" [filter]="true" filterBy="name"
+                            [showClear]="true" styleClass="w-full"
+                            [class.ng-invalid]="companyForm.get('package_id')?.invalid && companyForm.get('package_id')?.touched"
+                            [class.ng-dirty]="companyForm.get('package_id')?.valid">
+                            <ng-template pTemplate="item" let-package>
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-box text-primary"></i>
+                                    <span>{{ package.name }}</span>
+                                    <p-tag [value]="((package?.price ?? 0) | currency) || ''" severity="info"
+                                        styleClass="ml-auto">
+                                    </p-tag>
+                                </div>
+                            </ng-template>
+                        </p-select>
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="companyForm.get('package_id')?.invalid && companyForm.get('package_id')?.touched">
+                            Package selection is required
+                        </small>
+
+                        <!-- Package Start Date -->
+                        <div class="field mt-3">
+                            <label for="package_start_date" class="block font-medium mb-2 text-900">
+                                Package Start Date <span class="text-red-500">*</span>
+                            </label>
+                            <input id="package_start_date" type="date" pInputText formControlName="package_start_date"
+                                class="w-full p-inputtext-sm"
+                                [class.ng-invalid]="companyForm.get('package_start_date')?.invalid && companyForm.get('package_start_date')?.touched"
+                                [class.ng-dirty]="companyForm.get('package_start_date')?.valid">
+                            <small class="text-red-500 block mt-1"
+                                *ngIf="companyForm.get('package_start_date')?.invalid && companyForm.get('package_start_date')?.touched">
+                                Package start date is required
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="field">
+                        <label for="status" class="block font-medium mb-2 text-900">Status</label>
+                        <p-select id="status" [options]="statusOptionsForm" formControlName="is_active"
+                            optionLabel="label" optionValue="value" placeholder="Select status" styleClass="w-full">
+                        </p-select>
+                    </div>
+
+                </form>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-content-end p-3 border-top-1 surface-border">
+                <p-button label="Cancel" severity="secondary" [outlined]="true" (click)="closeSidebar()">
+                </p-button>
+                <p-button [label]="isEditMode ? 'Update Company' : 'Create Company'" [loading]="formLoading"
+                    [disabled]="companyForm.invalid" (click)="onSubmit()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+    <!-- View Company Dialog -->
+    <p-dialog [(visible)]="viewDialogVisible" [modal]="true" [closable]="true" [dismissableMask]="true"
+        [style.width]="'50vw'" header="Company Details" class="company-view-dialog">
+
+        <div class="company-details" *ngIf="selectedCompany">
+            <div class="grid">
+                <div class="col-12 mb-4">
+                    <div class="flex align-items-center gap-3">
+                        <i class="pi pi-building text-primary text-3xl"></i>
+                        <div>
+                            <h2 class="m-0 text-2xl font-bold">{{ selectedCompany?.name }}</h2>
+                            <p-tag [value]="selectedCompany?.is_active ? 'Active' : 'Inactive'"
+                                [severity]="selectedCompany?.is_active ? 'success' : 'danger'">
+                            </p-tag>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <h5 class="text-primary mb-3">Contact Information</h5>
+                    <div class="flex flex-column gap-3">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-envelope text-600"></i>
+                            <span>{{ selectedCompany?.email }}</span>
+                        </div>
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-phone text-600"></i>
+                            <span>{{ selectedCompany?.phone }}</span>
+                        </div>
+                        <div class="flex align-items-start gap-2">
+                            <i class="pi pi-map-marker text-600 mt-1"></i>
+                            <div>
+                                <div>{{ selectedCompany?.address_line1 }}</div>
+                                <div *ngIf="selectedCompany.address_line2">{{ selectedCompany?.address_line2 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <h5 class="text-primary mb-3">Admin Information</h5>
+                    <div class="flex flex-column gap-3">
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-user text-600"></i>
+                            <span>{{ selectedCompany?.admin?.name || selectedCompany?.admin?.first_name + ' ' +
+                                selectedCompany?.admin?.last_name }}</span>
+                        </div>
+                        <div class="flex align-items-center gap-2">
+                            <i class="pi pi-envelope text-600"></i>
+                            <span>{{ selectedCompany?.admin?.email }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12" *ngIf="selectedCompany.current_package">
+                    <h5 class="text-primary mb-3">Subscription Information</h5>
+                    <div class="surface-50 p-3 border-round">
+                        <div class="flex align-items-center justify-content-between">
+                            <div class="flex align-items-center gap-2">
+                                <i class="pi pi-box text-primary"></i>
+                                <span class="font-semibold">{{ selectedCompany?.current_package?.package?.name }}</span>
+                            </div>
+                            <p-tag [value]="((selectedCompany?.current_package?.package?.price ?? '0') | currency) || ''"
+                                severity="info">
+                            </p-tag>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </p-dialog>
+
+    <!-- Toast for notifications -->
+    <p-toast position="top-right"></p-toast>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog></p-confirmDialog>
 </div>

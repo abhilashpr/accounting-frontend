@@ -46,42 +46,63 @@ export class AppMenu {
         return [
             {
                 label: 'Configuration',
+                icon: 'pi pi-cog',
                 items: [
-                    { label: 'Package', icon: 'pi pi-users', routerLink: ['/superadmin/package'] },
+                    { label: 'Package', icon: 'pi pi-box', routerLink: ['/superadmin/package'] },
                     {
                         label: 'General Settings',
-                        icon: 'pi pi-fw pi-user',
+                        icon: 'pi pi-sliders-h',
                         items: [
                             {
                                 label: 'Country',
-                                icon: 'pi pi-fw pi-sign-in',
+                                icon: 'pi pi-globe',
                                 routerLink: ['/superadmin/country']
                             },
                             {
                                 label: 'State',
-                                icon: 'pi pi-fw pi-sign-in',
+                                icon: 'pi pi-map',
                                 routerLink: ['/superadmin/state']
                             },
                             {
                                 label: 'City',
-                                icon: 'pi pi-fw pi-sign-in',
+                                icon: 'pi pi-building',
                                 routerLink: ['/superadmin/city']
                             },
                             {
                                 label: 'Company-File',
-                                icon: 'pi pi-fw pi-sign-in',
+                                icon: 'pi pi-folder',
                                 routerLink: ['/superadmin/company-file']
                             }
                         ]
+                    },
+                    {
+                        label: 'Email Setting',
+                        icon: 'pi pi-envelope',
+                        routerLink: ['/superadmin/email-setting']
                     }
                 ]
             }, {
                 label: 'Company',
+                icon: 'pi pi-sitemap',
                 items: [
-                    { label: 'Company', icon: 'pi pi-users', routerLink: ['/superadmin/company'] },
+                    { label: 'Company', icon: 'pi pi-building-columns', routerLink: ['/superadmin/company'] },
 
                 ]
 
+            }, {
+                label: 'Report & Analysis',
+                icon: 'pi pi-chart-bar',
+                items: [
+                    {
+                        label: 'Report',
+                        icon: 'pi pi-chart-bar',
+                        items: [
+                            { label: 'Email Delivery Log', icon: 'pi pi-chart-line', routerLink: ['/superadmin/report/email-delivery-log'] },
+                            { label: 'Subscription Revenue', icon: 'pi pi-chart-line', routerLink: ['/superadmin/report/subscription-revenue'] },
+                            { label: 'Top Used Package', icon: 'pi pi-chart-line', routerLink: ['/superadmin/report/top-used-package'] },
+                        ]
+                    }
+                ]
             }
         ]
     }

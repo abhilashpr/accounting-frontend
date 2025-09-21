@@ -16,6 +16,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
 import { Superadmin } from '@/service/superadmin';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-state',
@@ -33,6 +34,7 @@ import { Superadmin } from '@/service/superadmin';
     InputIconModule,
     IconFieldModule,
     InputTextModule,
+    CommonModule
   ],
   templateUrl: './state.html',
   styleUrl: './state.scss'
