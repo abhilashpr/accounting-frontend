@@ -1,0 +1,263 @@
+<div class="card">
+    <div class="font-semibold text-xl mb-4">State Management</div>
+    
+    <!-- Search and Filter Section -->
+    <div class="flex justify-content-between align-items-center mb-4 gap-3">
+        <!-- Left: Search -->
+        <div class="flex-1">
+            <p-iconField iconPosition="left">
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input 
+                    pInputText 
+                    type="text" 
+                    placeholder="Search states..." 
+                    (input)="onGlobalFilter($event)"
+                    class="w-full"
+                    #searchInput>
+            </p-iconField>
+        </div>
+        
+        <!-- Right: Filter and Add Button -->
+        <div class="flex align-items-center gap-2">
+            <p-button 
+                label="Add State" 
+                icon="pi pi-plus" 
+                (onClick)="addState()"
+                severity="success">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <p-table 
+        #dt
+        [value]="states" 
+        [globalFilterFields]="['name', 'country.name', 'country.code']"
+        sortField="name" 
+        sortMode="single" 
+        [scrollable]="true"
+        scrollHeight="400px" 
+        [tableStyle]="{ 'min-width': '60rem' }"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+        
+        <ng-template #header>
+            <tr>
+                <th scope="col" pSortableColumn="name">
+                    Name <p-sortIcon field="name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="country.name">
+                    Country <p-sortIcon field="country.name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="is_active">
+                    Status <p-sortIcon field="is_active"></p-sortIcon>
+                </th>
+                <th scope="col" style="width: 150px;">Actions</th>
+            </tr>
+        </ng-template>
+        
+        <ng-template #body let-state let-rowIndex="rowIndex">
+            <tr>
+                <td>
+                    <strong>{{ state.name }}</strong>
+                </td>
+                <td>
+                    <div class="flex align-items-center gap-2">
+                        <img 
+                            [src]="'https://flagcdn.com/24x18/' + state.country.code.toLowerCase() + '.png'" 
+                            [alt]="state.country.name + ' flag'"
+                            class="flag-icon"
+                            onerror="this.style.display='none'">
+                        <span>{{ state.country.name }}</span>
+                        <p-tag 
+                            [value]="state.country.code" 
+                            severity="info"
+                            styleClass="font-mono text-xs">
+                        </p-tag>
+                    </div>
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="state.is_active ? 'Active' : 'Inactive'" 
+                        [severity]="state.is_active ? 'success' : 'danger'">
+                    </p-tag>
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button 
+                            icon="pi pi-pencil" 
+                            [text]="true" 
+                            [rounded]="true" 
+                            severity="info" 
+                            size="small"
+                            (click)="editState(state)"
+                            pTooltip="Edit State">
+                        </p-button>
+                        <p-button 
+                            icon="pi pi-trash" 
+                            [text]="true" 
+                            [rounded]="true" 
+                            severity="danger" 
+                            size="small"
+                            (click)="deleteState(state)"
+                            pTooltip="Delete State">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        
+        <ng-template #empty>
+            <tr>
+                <td colspan="4" class="text-center py-6">
+                    <div class="text-500">
+                        <i class="pi pi-map text-4xl mb-3"></i>
+                        <p class="text-lg">No states found</p>
+                        <p class="text-sm">Try adjusting your search or filter criteria</p>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <!-- Add/Edit State Drawer -->
+    <p-drawer 
+        [(visible)]="sidebarVisible" 
+        position="right" 
+        [modal]="true"
+        [dismissible]="true"
+        [showCloseIcon]="true"
+        [blockScroll]="true"
+        class="state-drawer"
+        (onHide)="onSidebarHide()"
+        [style.width]="'30vw'">
+
+        <ng-template pTemplate="header">
+            <div class="flex align-items-center gap-2">
+                <h3 class="m-0 font-semibold text-xl">
+                    {{ isEditMode ? 'Edit State' : 'Add New State' }}
+                </h3>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="drawer-content p-4">
+                <form [formGroup]="stateForm" class="flex flex-column gap-4" style="flex-direction: column;">
+                    
+                    <!-- State Name -->
+                    <div class="field">
+                        <label for="name" class="block font-medium mb-2 text-900">
+                            State Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            id="name"
+                            type="text" 
+                            pInputText 
+                            formControlName="name"
+                            placeholder="Enter state name"
+                            class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="stateForm.get('name')?.invalid && stateForm.get('name')?.touched"
+                            [class.ng-dirty]="stateForm.get('name')?.valid">
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="stateForm.get('name')?.invalid && stateForm.get('name')?.touched">
+                            State name is required
+                        </small>
+                    </div>
+
+                    <!-- Country Selection -->
+                    <div class="field">
+                        <label for="country_id" class="block font-medium mb-2 text-900">
+                            Country <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                            id="country_id"
+                            [options]="countries"
+                            formControlName="country_id"
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Select a country"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true"
+                            styleClass="w-full"
+                            [class.ng-invalid]="stateForm.get('country_id')?.invalid && stateForm.get('country_id')?.touched"
+                            [class.ng-dirty]="stateForm.get('country_id')?.valid">
+                            <ng-template pTemplate="selectedItem" let-selectedCountry>
+                                <div class="flex align-items-center gap-2" *ngIf="selectedCountry">
+                                    <img 
+                                        [src]="'https://flagcdn.com/16x12/' + getCountryCode(selectedCountry)?.toLowerCase() + '.png'" 
+                                        [alt]="selectedCountry.name + ' flag'"
+                                        class="flag-icon-small"
+                                        onerror="this.style.display='none'">
+                                    <span>{{ selectedCountry.name }}</span>
+                                </div>
+                            </ng-template>
+                            <ng-template pTemplate="item" let-country>
+                                <div class="flex align-items-center gap-2">
+                                    <img 
+                                        [src]="'https://flagcdn.com/16x12/' + country.code.toLowerCase() + '.png'" 
+                                        [alt]="country.name + ' flag'"
+                                        class="flag-icon-small"
+                                        onerror="this.style.display='none'">
+                                    <span>{{ country.name }}</span>
+                                    <p-tag 
+                                        [value]="country.code" 
+                                        severity="info"
+                                        styleClass="font-mono text-xs ml-auto">
+                                    </p-tag>
+                                </div>
+                            </ng-template>
+                        </p-select>
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="stateForm.get('country_id')?.invalid && stateForm.get('country_id')?.touched">
+                            Country selection is required
+                        </small>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="field">
+                        <label for="status" class="block font-medium mb-2 text-900">Status</label>
+                        <p-select
+                            id="status"
+                            [options]="statusOptionsForm"
+                            formControlName="is_active"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Select status"
+                            styleClass="w-full">
+                        </p-select>
+                    </div>
+
+                </form>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-content-end p-3 border-top-1 surface-border">
+                <p-button 
+                    label="Cancel" 
+                    severity="secondary" 
+                    [outlined]="true"
+                    (click)="closeSidebar()">
+                </p-button>
+                <p-button 
+                    [label]="isEditMode ? 'Update State' : 'Create State'"
+                    [loading]="formLoading"
+                    [disabled]="stateForm.invalid"
+                    (click)="onSubmit()">
+                </p-button>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+    <!-- Toast for notifications -->
+    <p-toast position="top-right"></p-toast>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog></p-confirmDialog>
+</div>

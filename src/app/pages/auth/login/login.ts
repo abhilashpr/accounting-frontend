@@ -32,7 +32,7 @@ export class Login {
         private readonly messageService: MessageService
     ) { }
     ngOnInit() {
-
+        this.checkTokenValidRedirect()
     }
 
     checkTokenValidRedirect() {
@@ -49,7 +49,7 @@ export class Login {
     }
 
     onclickSignin() {
-        debugger
+        
 
         this.authService.userLogin({ email: this.email, password: this.password }).subscribe({
             next: (res: ApiResponse<AuthResponse>) => {

@@ -1,0 +1,165 @@
+<div class="card">
+    <div class="font-semibold text-xl mb-4">Company Files</div>
+    <div class="flex justify-content-between align-items-center mb-4 gap-3">
+        <!-- Left: Search -->
+        <div class="flex-1">
+            <p-iconField iconPosition="left">
+                <p-inputIcon class="pi pi-search"></p-inputIcon>
+                <input pInputText type="text" placeholder="Search company files..." (input)="onGlobalFilter($event)"
+                    class="w-full" #searchInput>
+            </p-iconField>
+        </div>
+
+        <!-- Right: Filter and Add Button -->
+        <div class="flex align-items-center gap-2">
+            <p-button label="Add Company File" icon="pi pi-plus" (onClick)="addCompanyFile()" severity="success">
+            </p-button>
+        </div>
+    </div>
+    
+    <p-table #dt [value]="companyFiles" sortField="file_name" sortMode="single" [scrollable]="true"
+        scrollHeight="400px" [tableStyle]="{ 'min-width': '60rem' }" [paginator]="true" [rows]="10" [loading]="loading"
+        emptyMessage="No company files found">
+        <ng-template #header>
+            <tr>
+                <th scope="col" pSortableColumn="file_name" style="min-width: 200px">
+                    Name 
+                    <p-sortIcon field="file_name"></p-sortIcon>
+                </th>
+                <th scope="col" pSortableColumn="is_active" style="min-width: 120px">
+                    Status
+                    <p-sortIcon field="is_active"></p-sortIcon>
+                </th>
+                <th scope="col" style="min-width: 120px">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-companyFile let-rowIndex="rowIndex">
+            <tr>
+                <td>
+                    <span class="font-medium">{{ companyFile.file_name }}</span>
+                </td>
+                <td>
+                    <p-tag [value]="companyFile.is_active ? 'Active' : 'Inactive'"
+                        [severity]="companyFile.is_active ? 'success' : 'danger'">
+                    </p-tag>
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="info" size="small"
+                            (click)="editCompanyFile(companyFile)" pTooltip="Edit Company File">
+                        </p-button>
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small"
+                            (click)="deleteCompanyFile(companyFile)" pTooltip="Delete Company File">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        
+        <ng-template #empty>
+            <tr>
+                <td colspan="3" class="text-center p-4">
+                    <div class="flex flex-column align-items-center gap-3">
+                        <i class="pi pi-inbox text-4xl text-400"></i>
+                        <span class="text-lg text-600">No company files found</span>
+                        <p-button label="Add First Company File" icon="pi pi-plus" 
+                            (onClick)="addCompanyFile()" size="small">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+    
+    <!-- Sidebar/Drawer for Add/Edit -->
+    <p-drawer [(visible)]="sidebarVisible" position="right" [modal]="true" [dismissible]="true" [showCloseIcon]="true"
+        [blockScroll]="true" class="company-file-drawer" (onHide)="onSidebarHide()" styleClass="w-full md:w-20rem lg:w-30rem">
+        <ng-template pTemplate="header">
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-file text-primary text-xl"></i>
+                <h3 class="m-0 font-semibold text-xl">
+                    {{ isEditMode ? 'Edit Company File' : 'Add New Company File' }}
+                </h3>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="drawer-content p-4">
+                <form [formGroup]="countryForm" (ngSubmit)="onSubmit()" class="flex flex-column gap-4" style="flex-direction: column;">
+                    <!-- Company File Name Field -->
+                    <div class="field">
+                        <label for="name" class="block font-medium mb-2 text-900">
+                            Company File Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            id="name"
+                            type="text" 
+                            pInputText 
+                            formControlName="name"
+                            placeholder="Enter company file name"
+                            class="w-full p-inputtext-sm"
+                            [class.ng-invalid]="hasFieldError('name')"
+                            [class.ng-dirty]="countryForm.get('name')?.valid && countryForm.get('name')?.dirty">
+                        
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="hasFieldError('name')">
+                            {{ getFieldError('name') }}
+                        </small>
+                    </div>
+
+                    <!-- Status Field -->
+                    <div class="field">
+                        <label for="status" class="block font-medium mb-2 text-900">
+                            Status <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                            id="status"
+                            [options]="statusOptionsForm"
+                            formControlName="is_active"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Select status"
+                            styleClass="w-full"
+                            [class.ng-invalid]="hasFieldError('is_active')">
+                        </p-select>
+                        
+                        <small 
+                            class="text-red-500 block mt-1" 
+                            *ngIf="hasFieldError('is_active')">
+                            {{ getFieldError('is_active') }}
+                        </small>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex gap-2 justify-content-end mt-4">
+                        <p-button 
+                            label="Cancel" 
+                            icon="pi pi-times" 
+                            severity="secondary"
+                            [text]="true"
+                            (onClick)="closeSidebar()"
+                            [disabled]="formLoading">
+                        </p-button>
+                        
+                        <p-button 
+                            [label]="isEditMode ? 'Update' : 'Create'" 
+                            [icon]="isEditMode ? 'pi pi-check' : 'pi pi-plus'"
+                            type="submit"
+                            [loading]="formLoading"
+                            [disabled]="!countryForm.valid || formLoading">
+                        </p-button>
+                    </div>
+                </form>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog 
+        [style]="{ width: '450px' }"
+        [baseZIndex]="10000"
+        rejectButtonStyleClass="p-button-outlined">
+    </p-confirmDialog>
+</div>
